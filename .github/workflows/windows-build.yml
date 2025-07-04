@@ -1,0 +1,59 @@
+name: Windows EXE ve Installer Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Kodu Checkout Et
+        uses: actions/checkout@v4
+
+      - name: Python Kurulumu
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Gereklilikleri Kur
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: PyInstaller ile EXE Oluştur
+        run: |
+          pyinstaller --onefile --add-data "static;static" --add-data "utils;utils" --add-data "config.py;." app.py
+
+      - name: Inno Setup Kurulumu
+        run: |
+          choco install innosetup -y
+
+      - name: Installer Oluştur (Inno Setup)
+        run: |
+          "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss
+
+      - name: EXE ve Installer'ı Release'e Yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: |
+            dist/app.exe
+            Kurulum.exe
+
+      - name: Release Oluştur ve Dosyaları Yükle
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        with:
+          tag_name: otomatik-build-${{ github.run_number }}
+          name: Otomatik Build ${{ github.run_number }}
+          body: |
+            Bu sürüm otomatik olarak oluşturulmuştur.
+          files: |
+            dist/app.exe
+            Kurulum.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

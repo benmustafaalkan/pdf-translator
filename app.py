@@ -125,7 +125,7 @@ def main():
             st.markdown("""
             <div class="upload-section">
                 <p>Çevirmek istediğiniz PDF dosyasını seçin</p>
-                <p><strong>Maksimum:</strong> 50 MB, 300 sayfa</p>
+                <p><strong>Maksimum:</strong> 50 MB, 800 sayfa</p>
             </div>
             """, unsafe_allow_html=True)
             

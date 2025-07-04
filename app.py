@@ -120,80 +120,80 @@ def main():
     if folders_exist:
         with st.container():
             st.markdown('<div class="card">', unsafe_allow_html=True)
-                st.markdown('<h2>📤 PDF Dosyası Yükle</h2>', unsafe_allow_html=True)
+            st.markdown('<h2>📤 PDF Dosyası Yükle</h2>', unsafe_allow_html=True)
+            
+            st.markdown("""
+            <div class="upload-section">
+                <p>Çevirmek istediğiniz PDF dosyasını seçin</p>
+                <p><strong>Maksimum:</strong> 50 MB, 300 sayfa</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            uploaded_file = st.file_uploader(
+                "PDF dosyası seçin",
+                type=['pdf'],
+                key="pdf_uploader"
+            )
+            
+            if uploaded_file is not None:
+                # Dosya bilgilerini göster
+                file_info = {
+                    'name': uploaded_file.name,
+                    'size': uploaded_file.size,
+                    'size_mb': round(uploaded_file.size / (1024 * 1024), 2)
+                }
                 
-                st.markdown("""
-                <div class="upload-section">
-                    <p>Çevirmek istediğiniz PDF dosyasını seçin</p>
-                    <p><strong>Maksimum:</strong> 50 MB, 300 sayfa</p>
+                st.markdown(f"""
+                <div class="file-info">
+                    <h4>📄 {file_info['name']}</h4>
+                    <p><strong>Boyut:</strong> {file_info['size_mb']} MB</p>
+                    <p><strong>Tip:</strong> PDF</p>
                 </div>
                 """, unsafe_allow_html=True)
                 
-                uploaded_file = st.file_uploader(
-                    "PDF dosyası seçin",
-                    type=['pdf'],
-                    key="pdf_uploader"
-                )
+                # Dosyayı geçici olarak kaydet
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+                    tmp_file.write(uploaded_file.getvalue())
+                    temp_path = tmp_file.name
                 
-                if uploaded_file is not None:
-                    # Dosya bilgilerini göster
-                    file_info = {
-                        'name': uploaded_file.name,
-                        'size': uploaded_file.size,
-                        'size_mb': round(uploaded_file.size / (1024 * 1024), 2)
-                    }
-                    
-                    st.markdown(f"""
-                    <div class="file-info">
-                        <h4>📄 {file_info['name']}</h4>
-                        <p><strong>Boyut:</strong> {file_info['size_mb']} MB</p>
-                        <p><strong>Tip:</strong> PDF</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
-                    # Dosyayı geçici olarak kaydet
-                    with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
-                        tmp_file.write(uploaded_file.getvalue())
-                        temp_path = tmp_file.name
-                    
-                    # PDF doğrulama
-                    is_valid, validation_message = st.session_state.pdf_processor.validate_pdf(temp_path)
-                    
-                    if is_valid:
-                        st.session_state.uploaded_file = temp_path
-                        st.markdown(f'<div class="message-box message-success">{validation_message}</div>', unsafe_allow_html=True)
-                        
-                        # Çeviri butonu
-                        if st.button("🔄 Çeviriyi Başlat", key="translate_btn", use_container_width=True):
-                            start_translation(temp_path, uploaded_file.name)
-                    else:
-                        st.markdown(f'<div class="message-box message-error">{validation_message}</div>', unsafe_allow_html=True)
-                        # Geçici dosyayı sil
-                        if os.path.exists(temp_path):
-                            os.unlink(temp_path)
+                # PDF doğrulama
+                is_valid, validation_message = st.session_state.pdf_processor.validate_pdf(temp_path)
                 
-                st.markdown('</div>', unsafe_allow_html=True)
+                if is_valid:
+                    st.session_state.uploaded_file = temp_path
+                    st.markdown(f'<div class="message-box message-success">{validation_message}</div>', unsafe_allow_html=True)
+                    
+                    # Çeviri butonu
+                    if st.button("🔄 Çeviriyi Başlat", key="translate_btn", use_container_width=True):
+                        start_translation(temp_path, uploaded_file.name)
+                else:
+                    st.markdown(f'<div class="message-box message-error">{validation_message}</div>', unsafe_allow_html=True)
+                    # Geçici dosyayı sil
+                    if os.path.exists(temp_path):
+                        os.unlink(temp_path)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
     
     # Çeviri durumu kartı
     if st.session_state.translation_complete:
         with st.container():
             st.markdown('<div class="card">', unsafe_allow_html=True)
-                st.markdown('<h2>✅ Çeviri Tamamlandı</h2>', unsafe_allow_html=True)
-                
-                st.markdown("""
-                <div class="message-box message-success">
-                    PDF dosyanız başarıyla çevrildi ve result klasörüne kaydedildi.
-                </div>
-                """, unsafe_allow_html=True)
-                
-                if st.button("📁 Result Klasörünü Aç", key="open_folder"):
-                    success, message = st.session_state.file_manager.open_result_folder()
-                    if success:
-                        st.success(message)
-                    else:
-                        st.error(message)
-                
-                st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown('<h2>✅ Çeviri Tamamlandı</h2>', unsafe_allow_html=True)
+            
+            st.markdown("""
+            <div class="message-box message-success">
+                PDF dosyanız başarıyla çevrildi ve result klasörüne kaydedildi.
+            </div>
+            """, unsafe_allow_html=True)
+            
+            if st.button("📁 Result Klasörünü Aç", key="open_folder"):
+                success, message = st.session_state.file_manager.open_result_folder()
+                if success:
+                    st.success(message)
+                else:
+                    st.error(message)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
 
 def start_translation(file_path, original_filename):
     """Çeviri işlemini başlatır."""

@@ -48,3 +48,5 @@
 ---
 
 Her şey otomatik! Sadece 3 adımda kullanıma hazır: Kur, API anahtarını gir, başlat!
+
+<!-- Workflow tetikleme denemesi -->
